@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Smart Supervisor System – AI-Powered Final Year Project (FYP) Evaluation, Authenticity Grading, and Progress Tracking." />
+  <title>Smart Supervisor System | University FYP Academic Portal</title>
+  
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
+  
+  <!-- Chart.js for Authentic Score & Progress Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  
+  <!-- jsPDF for Academic Report Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Global Application Wrapper -->
+  <div id="app" class="app-container">
+    <!-- Dynamic Content Rendered by app.js -->
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Upload & AI Evaluation Modal                                 -->
+  <!-- ============================================================ -->
+  <div id="uploadModal" class="modal-overlay">
+    <div class="modal-card upload-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-file-circle-plus modal-icon"></i>
+          <div>
+            <h3>Upload New Draft for AI Evaluation</h3>
+            <p class="modal-subtitle">Paste your SRS / SDD text or load a sample to get instant authentic-score feedback</p>
+          </div>
+        </div>
+        <button id="closeUploadModal" class="icon-btn" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Document Type Selector -->
+        <div class="form-row">
+          <label class="form-label" for="modalDocType">Document Type</label>
+          <select id="modalDocType" class="form-select">
+            <option value="SRS">SRS – Software Requirements Specification</option>
+            <option value="SDD">SDD – Software Design Document</option>
+          </select>
+        </div>
+
+        <!-- Sample Loaders -->
+        <div class="sample-loaders">
+          <span class="sample-label"><i class="fa-solid fa-database"></i> Load Sample:</span>
+          <button id="loadSampleSRS" class="chip-btn">Strong SRS</button>
+          <button id="loadSampleSDD" class="chip-btn">SDD Draft</button>
+          <button id="loadIncompleteSRS" class="chip-btn chip-warn">Incomplete SRS</button>
+        </div>
+
+        <!-- Drop Zone -->
+        <div id="modalDropZone" class="drop-zone" role="button" tabindex="0" aria-label="Upload file or click to browse">
+          <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+          <p>Drag &amp; drop a <code>.txt</code> / <code>.md</code> file here, or <strong>click to browse</strong></p>
+          <input type="file" id="fileInput" accept=".txt,.md,.text" class="hidden-file-input" />
+        </div>
+
+        <!-- Document Text -->
+        <div class="form-row">
+          <label class="form-label" for="modalDocText">Document Text</label>
+          <textarea id="modalDocText" class="form-textarea" rows="12"
+            placeholder="Paste your SRS or SDD text here…"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="cancelUploadBtn" class="btn btn-ghost">Cancel</button>
+        <button id="runAiScanBtn" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-bolt"></i> Run Instant AI Evaluation
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Meeting Scheduler Modal                                       -->
+  <!-- ============================================================ -->
+  <div id="meetingModal" class="modal-overlay">
+    <div class="modal-card meeting-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-calendar-plus modal-icon"></i>
+          <div>
+            <h3>Request Supervisor Meeting</h3>
+            <p class="modal-subtitle">Select a time slot and describe your agenda</p>
+          </div>
+        </div>
+        <button id="closeMeetingModal" class="icon-btn" aria-label="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-row">
+          <label class="form-label" for="meetingAgendaInput">Meeting Agenda</label>
+          <input type="text" id="meetingAgendaInput" class="form-input"
+            placeholder="e.g. Review missing NFR sections in SRS v1.1" />
+        </div>
+
+        <div class="form-row">
+          <label class="form-label"><i class="fa-solid fa-clock"></i> AI-Suggested Slots</label>
+          <div id="modalSlotsList" class="slots-list">
+            <!-- Slots injected by app.js -->
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="cancelMeetingBtn" class="btn btn-ghost">Cancel</button>
+        <button id="submitMeetingBtn" class="btn btn-success btn-lg">
+          <i class="fa-solid fa-paper-plane"></i> Send Meeting Request
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Floating AI Chatbot Widget -->
+  <div id="aiChatWidget" class="ai-chat-widget">
+    <button id="aiChatToggleBtn" class="ai-chat-toggle-btn" title="Open FYP Academic Assistant" aria-label="Open FYP Academic Assistant">
+      <div class="bot-badge-icon">
+        <i class="fa-solid fa-robot"></i>
+      </div>
+      <span class="chat-btn-label">AI Supervisor Assistant</span>
+      <span class="pulse-ring"></span>
+    </button>
+
+    <div id="aiChatWindow" class="ai-chat-window hidden">
+      <div class="ai-chat-header">
+        <div class="ai-chat-title">
+          <div class="ai-avatar">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div>
+            <h4 class="title-text">FYP Academic Mentor AI</h4>
+            <span class="online-indicator"><span class="green-dot"></span> IEEE 830 & Department Guidelines</span>
+          </div>
+        </div>
+        <button id="aiChatCloseBtn" class="icon-btn" aria-label="Close Assistant">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="ai-chat-body" id="aiChatMessages">
+        <div class="chat-msg ai-msg">
+          <div class="msg-bubble">
+            <p><strong>Hello!</strong> I am your Smart Supervisor AI Assistant. Ask me anything about IEEE 830 SRS guidelines, SDD architecture models, raising your authentic score, or fixing modal verbs.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-chat-quick-actions">
+        <button class="quick-chip" data-query="How to write IEEE standard NFRs?">IEEE NFRs</button>
+        <button class="quick-chip" data-query="Why should I replace 'will' with 'shall'?">Shall vs Will</button>
+        <button class="quick-chip" data-query="What makes an acceptable SDD ERD?">SDD ERD Rules</button>
+        <button class="quick-chip" data-query="How is the Authentic Score calculated?">Score Breakdown</button>
+      </div>
+
+      <form id="aiChatForm" class="ai-chat-footer">
+        <input type="text" id="aiChatInput" placeholder="Ask FYP Mentor a question..." autocomplete="off" />
+        <button type="submit" id="aiChatSendBtn" aria-label="Send Message">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Application Script -->
+  <script src="app.js"></script>
+</body>
+</html>
